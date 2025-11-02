@@ -1,10 +1,5 @@
-PyTorchLabFlow documentation
+lwFlow documentation
 ============================
-.. image:: resources/PTLFlogo-light.jpg
-   :alt: PTLFlogo
-   :width: 300px
-   :align: right
-
 
 .. toctree::
    :maxdepth: 2
