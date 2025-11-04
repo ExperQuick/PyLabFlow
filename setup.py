@@ -15,9 +15,22 @@
 
 from setuptools import setup, find_packages
 
+def get_version():
+    version_file = os.path.join('src', 'plf', '_version.py')
+    with open(version_file) as f:
+        for line in f:
+            if line.strip().startswith('__version__'):
+                # Extract the version string between quotes
+                parts = line.split('=', 1)
+                if len(parts) == 2:
+                    version_str = parts[1].strip().strip('"\'')
+                    return version_str
+                break
+    raise RuntimeError("Unable to find version string in _version.py.")
+
 setup(
     name='PyLabFlow',
-    version='0.2.1',
+    version=get_version(),
     package_dir={'': 'src'},
     packages=find_packages(where='src'),
     include_package_data=True,
