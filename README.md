@@ -109,12 +109,16 @@ class GenericDataWorkflow(WorkFlow):
     
     # Initialize the pipeline run configuration
     def new(self, args: Dict[str, Any]):
-        self.data_source = self.load_component(**args['data_source'])
-        self.algorithm = self.load_component(**args['algorithm'])
-        self.paths = ['results']  # Define artifact paths
+        # Ensure all required configuration keys are provided
+        if not self.template.issubset(set(args.keys())):
+            raise ValueError(f'the args should have {", ".join(self.template- set(list(args.keys())))}')
+        
+        
 
     # Perform setup (e.g., loading large datasets/models into memory)
     def prepare(self):
+        self.data_source = self.load_component(**args['data_source'])
+        self.algorithm = self.load_component(**args['algorithm'])
         print("Preparing workflow: loading external data or setting up environment...")
         return True
 
