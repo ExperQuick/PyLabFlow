@@ -275,7 +275,7 @@ class WorkFlow(Component, ABC):
         Return the current status or progress of the workflow.
         """
         return {}
-
+    
 class Db:
     """
         Lightweight SQLite wrapper with foreign key enforcement.
