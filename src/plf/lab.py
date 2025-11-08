@@ -62,6 +62,15 @@ def create_project(settings: dict) -> str:
 
     return setting_path
 
+def create_and_init_db(db_path: str, tables: list, init_statements: list = None):
+    db = Db(db_path=db_path)
+    for table_sql in tables:
+        db.execute(table_sql)
+    if init_statements:
+        for stmt, params in init_statements:
+            db.execute(stmt, params)
+    db.close()
+
 def setup_databases(settings: dict):
     """
     Sets up the required databases for the lab project, including:
@@ -69,18 +78,6 @@ def setup_databases(settings: dict):
     - ppls.db (with ppls, edges, runnings tables)
     - Archived/ppls.db (with ppls table)
     """
-    from .utils import Db
-    from .context import get_caller
-
-    def create_and_init_db(db_path: str, tables: list, init_statements: list = None):
-        db = Db(db_path=db_path)
-        for table_sql in tables:
-            db.execute(table_sql)
-        if init_statements:
-            for stmt, params in init_statements:
-                db.execute(stmt, params)
-        db.close()
-
     # ---- logs.db ----
     logs_db_path = os.path.join(settings["data_path"], "logs.db")
     logs_table = """
