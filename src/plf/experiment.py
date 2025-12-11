@@ -10,7 +10,7 @@ from collections import defaultdict
 import pandas as pd
 
 from .context import get_shared_data
-from .utils import Db, filter_configs, get_matching
+from .utils import Db, filter_configs, get_matching, is_comp
 from ._pipeline import PipeLine
 
 
@@ -42,9 +42,7 @@ def get_ppls() -> List[str]:
     rows = [i[0] for i in rows]
     return rows
 
-def is_comp(x):
-    if isinstance(x, dict) and "loc" in x and "args" in x:
-        return True
+
 
 def get_ppl_details(ppls: Optional[list] = None) -> pd.DataFrame:
     ppls = get_ppls() if ppls is None else ppls

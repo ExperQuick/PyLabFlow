@@ -275,7 +275,11 @@ class WorkFlow(Component, ABC):
         Return the current status or progress of the workflow.
         """
         return {}
-    
+
+def is_comp(x):
+    if isinstance(x, dict) and "loc" in x and "args" in x:
+        return True
+  
 class Db:
     """
         Lightweight SQLite wrapper with foreign key enforcement.

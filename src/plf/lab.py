@@ -177,6 +177,3 @@ def get_logs():
     db.close()
     df = pd.DataFrame(rows, columns=col_names)
     return df
-
-def lab_clone():
-    pass
