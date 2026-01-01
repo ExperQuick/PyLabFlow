@@ -185,10 +185,32 @@ def get_logs():
     df = pd.DataFrame(rows, columns=col_names)
     return df
 
+from uuid import uuid4
 
-def create_clone(clone_id, name, desc="", clone_type="remote"):
+def create_clone(name, desc="", clone_type="remote", clone_id=None):
+    """
+    Create a clone entry in BASE lab.
+
+    If clone_id is not provided, a unique one is generated automatically.
+    """
     settings = get_shared_data()
-    clones_dir = Path(settings["data_path"]) / "Clones" / clone_id
+    clones_root = Path(settings["data_path"]) / "Clones"
+
+    # -----------------------------
+    # Generate unique clone_id
+    # -----------------------------
+    if clone_id is None:
+        while True:
+            clone_id = (
+                "cl_"
+                + datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+                + "_"
+                + uuid4().hex[:6]
+            )
+            if not (clones_root / clone_id).exists():
+                break
+
+    clones_dir = clones_root / clone_id
     clones_dir.mkdir(parents=True, exist_ok=False)
 
     clone_cfg = {
@@ -204,3 +226,95 @@ def create_clone(clone_id, name, desc="", clone_type="remote"):
         json.dump(clone_cfg, f, indent=4)
 
     return clone_cfg
+
+
+
+def init_clone(
+    clone_config: dict,
+    data_path: str,
+    component_dir: str,
+):
+    """
+    Initialize a REMOTE lab from a clone configuration.
+
+    This is executed on a DIFFERENT SYSTEM (remote machine).
+
+    Parameters
+    ----------
+    clone_config : dict
+        The clone.json content copied from BASE lab.
+    data_path : str
+        Base directory where remote lab data should live.
+    component_dir : str
+        Directory where transferred / local components (code) live.
+
+    Returns
+    -------
+    dict
+        Initialized lab settings
+    """
+    clone_id = clone_config["clone_id"]
+
+    # Absolute paths
+    data_path = os.path.abspath(data_path)
+    component_dir = os.path.abspath(component_dir)
+
+    # Project naming
+    project_name = f"remote_{clone_id}"
+    project_dir = os.path.dirname(data_path)
+
+    settings = {
+        # Identity
+        "lab_id": clone_id,
+        "lab_role": "remote",
+
+        # Project
+        "project_name": project_name,
+        "project_dir": project_dir,
+        "component_dir": component_dir,
+
+        # Runtime
+        "data_path": data_path,
+        "clone_config": clone_config,
+
+        # Transfer/runtime state
+        "transfer_context": None,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    # -----------------------------
+    # Create directories
+    # -----------------------------
+    os.makedirs(data_path, exist_ok=True)
+    os.makedirs(component_dir, exist_ok=True)
+
+    # Required runtime dirs
+    for d in [
+        "Transfers",
+        "TransfersOut",
+        "RemoteResults",
+        "Archived",
+    ]:
+        os.makedirs(os.path.join(data_path, d), exist_ok=True)
+
+    # -----------------------------
+    # Setup databases
+    # -----------------------------
+    setup_databases(settings)
+
+    # -----------------------------
+    # Persist settings
+    # -----------------------------
+    settings_path = os.path.join(data_path, f"{project_name}.json")
+    settings["setting_path"] = settings_path
+
+    with open(settings_path, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=4)
+
+    # -----------------------------
+    # Activate lab
+    # -----------------------------
+    set_shared_data(settings)
+    register_libs_path(component_dir)
+
+    return settings
