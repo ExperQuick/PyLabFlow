@@ -291,3 +291,67 @@ def _import_on_base(zip_path, meta):
     settings = get_shared_data()
     results_dir = Path(settings["data_path"]) / "RemoteResults" / meta["transfer_id"]
     _safe_extract(zip_path, results_dir)
+
+
+
+import json
+from pathlib import Path
+import pandas as pd
+
+def get_clones():
+    """
+    Return a DataFrame of all registered clones.
+
+    Only valid in BASE lab.
+    """
+    settings = get_shared_data()
+
+    if settings.get("lab_role") != "base":
+        raise RuntimeError("get_clones() is allowed only in BASE lab")
+
+    clones_root = Path(settings["data_path"]) / "Clones"
+    rows = []
+
+    if not clones_root.exists():
+        return pd.DataFrame(
+            columns=[
+                "clone_id",
+                "clone_type",
+                "name",
+                "desc",
+                "created_at",
+                "num_transfers",
+            ]
+        )
+
+    for clone_dir in clones_root.iterdir():
+        if not clone_dir.is_dir():
+            continue
+
+        cfg_path = clone_dir / "clone.json"
+        if not cfg_path.exists():
+            continue
+
+        try:
+            with open(cfg_path, encoding="utf-8") as f:
+                cfg = json.load(f)
+
+            rows.append({
+                "clone_id": cfg.get("clone_id"),
+                "clone_type": cfg.get("clone_type"),
+                "name": cfg.get("name"),
+                "desc": cfg.get("desc"),
+                "created_at": cfg.get("created_at"),
+                "num_transfers": len(cfg.get("transfers", [])),
+            })
+
+        except Exception:
+            # Skip broken clone entries safely
+            continue
+
+    df = pd.DataFrame(rows)
+
+    if not df.empty:
+        df = df.sort_values("created_at").reset_index(drop=True)
+
+    return df
