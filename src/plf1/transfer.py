@@ -38,7 +38,7 @@ def _safe_extract(zip_path: Path, target_dir: Path):
     # extract  srcs  and locs
     #  then configs
     # then other artifacts
-
+    print(target_dir)
     target_dir.mkdir(parents=True, exist_ok=True)
     with zipfile.ZipFile(zip_path) as zf:
         for member in zf.infolist():
@@ -168,93 +168,6 @@ import ast
 import hashlib
 from pathlib import Path
 from copy import deepcopy
-
-def _write_loc_payload(zf, locs: set, transfer_id: str):
-    settings = get_shared_data()
-    component_dir = Path(settings["component_dir"]).resolve()
-
-    loc_map = {}
-    code_chunks = []
-
-    # Step 1: collect all classes across LOCs
-    class_defs = {}  # loc -> (class_name, ast.ClassDef)
-    for loc in sorted(locs):
-        if "." not in loc:
-            continue
-
-        module_path_str, class_name = loc.rsplit(".", 1)
-        module_path = (component_dir / Path(*module_path_str.split("."))).with_suffix(".py")
-
-        if not module_path.exists():
-            print(f"Warning: component file not found: {module_path}")
-            continue
-
-        code_text = module_path.read_text(encoding="utf-8")
-        tree = ast.parse(code_text)
-
-        target_class = None
-        imports = []
-
-        for node in tree.body:
-            if isinstance(node, (ast.Import, ast.ImportFrom)):
-                imports.append(node)
-            elif isinstance(node, ast.ClassDef) and node.name == class_name:
-                target_class = node
-
-        if target_class is None:
-            print(f"Warning: class '{class_name}' not found in {module_path}")
-            continue
-
-        class_defs[loc] = (class_name, deepcopy(target_class), imports)
-
-    if not class_defs: # if  there are no loc in  configs
-        raise RuntimeError("No classes found for the provided locs")
-
-    # Step 2: compute unique names for all classes
-    old_to_new = {}
-    for loc, (class_name, class_node, _) in class_defs.items():
-        loc_hash = hashlib.sha1(loc.encode("utf-8")).hexdigest()[:8]
-        new_name = f"{class_name}{loc_hash}"
-        old_to_new[class_name] = new_name
-        loc_map[loc] = f"{transfer_id}.{new_name}" # keep hash of trasfer_id  will  be shorter
-
-    # Step 3: rewrite ASTs with renamed classes and updated bases
-    final_code_chunks = []
-    all_imports = set()
-
-    for loc, (class_name, class_node, imports) in class_defs.items():
-        # Rename class
-        class_node.name = old_to_new[class_name]
-
-        # Replace base classes if they exist in old_to_new
-        new_bases = []
-        for base in class_node.bases:
-            if isinstance(base, ast.Name) and base.id in old_to_new:
-                new_bases.append(ast.Name(id=old_to_new[base.id], ctx=ast.Load()))
-            else:
-                new_bases.append(base)
-        class_node.bases = new_bases
-
-        # Collect imports
-        for imp in imports:
-            all_imports.add(ast.unparse(imp))   #   avoid dublicates
-
-        # Build final module chunk for this class
-        module_chunk = ast.Module(body=[class_node], type_ignores=[])
-        ast.fix_missing_locations(module_chunk)
-        class_code = ast.unparse(module_chunk)
-
-        final_code_chunks.append(f"# --- {loc} ---\n{class_code}\n")
-
-    # Combine imports + class chunks
-    imports_code = "\n".join(sorted(all_imports))
-    py_code = f"{imports_code}\n\n" + "\n\n".join(final_code_chunks)
-
-    # Write single .py file to zip
-    py_name = f"{transfer_id}.py" # take hash of transferid
-    zf.writestr(py_name, py_code)
-
-    return loc_map
 
 # ---------------------------
 # Internal: BASE -> REMOTE
@@ -519,9 +432,24 @@ def _import_on_remote(zip_path: Path, meta: dict, mode="copy", allow_overwrite=F
     # --------------------------------------------------
     _register_ppls_in_db(ppls_meta)
 
+    # --------------------------------------------------
+    # 1️⃣ Materialize CONFIGS FIRST
+    # --------------------------------------------------
+    configs_dst = lab_base / "Configs"
+    configs_dst.mkdir(parents=True, exist_ok=True)
+
     for pplid in incoming_ppls:
-        dst = lab_base 
-        src = transfer_dir / dst.relative_to(lab_base)
+        src = transfer_dir / "Configs" / f"{pplid}.json"
+        dst = configs_dst / f"{pplid}.json"
+
+        if not src.exists():
+            raise FileNotFoundError(f"Missing config for pplid {pplid}")
+
+        if dst.exists():
+            if not allow_overwrite:
+                raise FileExistsError(f"Config already exists: {dst}")
+            dst.unlink()
+
         shutil.move(src, dst)
 
 
@@ -555,14 +483,33 @@ def _import_on_remote(zip_path: Path, meta: dict, mode="copy", allow_overwrite=F
     cfg["active_transfer_id"] = transfer_id
 
     _save_transfer_config(transfers_dir, cfg)
+    # --------------------------------------------------
+    # 2️⃣ Now materialize remaining paths via PipeLine
+    # --------------------------------------------------
     for pplid in incoming_ppls:
         P = PipeLine(pplid=pplid)
-        for p in P.paths:
-            if p=='config':
+
+        for key in P.paths:
+            if key == "config":
                 continue
-            dst = Path(P.get_path(p))
-            src = transfer_dir / dst.relative_to(lab_base)
-            shutil.move(src, dst)
+
+            dst = Path(P.get_path(key))
+            rel = dst.relative_to(lab_base)
+            src = transfer_dir / rel
+
+            if not src.exists():
+                continue
+
+            if src.is_dir():
+                dst.mkdir(parents=True, exist_ok=True)
+                for f in src.rglob("*"):
+                    if f.is_file():
+                        out = dst / f.relative_to(src)
+                        out.parent.mkdir(parents=True, exist_ok=True)
+                        shutil.move(f, out)
+            else:
+                dst.parent.mkdir(parents=True, exist_ok=True)
+                shutil.move(src, dst)
 
     return True
 
@@ -665,7 +612,8 @@ def get_clones():
     settings = get_shared_data()
 
     if settings.get("lab_role") != "base":
-        raise RuntimeError("get_clones() is allowed only in BASE lab")
+        print("get_clones() is allowed only in BASE lab")
+        return
 
     clones_root = Path(settings["data_path"]) / "Clones"
     rows = []
@@ -730,3 +678,217 @@ def get_transfers():
     cfg_path = transfers_dir / "transfer_config.json"
     transfers = json.loads(cfg_path.read_text(encoding="utf-8"))
     return transfers["ppl_to_transfer"]
+
+
+
+
+
+
+
+import ast
+import hashlib
+from pathlib import Path
+from copy import deepcopy
+
+# ------------------------------------------------------------
+# Helpers
+# ------------------------------------------------------------
+
+def _loc_hash(loc: str) -> str:
+    return hashlib.sha1(loc.encode("utf-8")).hexdigest()[:8]
+
+def _class_dependencies(class_defs, old_to_new):
+    """
+    Returns: dict[new_class_name] -> set[new_base_names]
+    Only considers local classes in old_to_new.
+    """
+    deps = {}
+    for _, (class_name, cls_node, _) in class_defs.items():
+        new_name = old_to_new[class_name]
+        deps[new_name] = set()
+        for base in cls_node.bases:
+            if isinstance(base, ast.Name) and base.id in old_to_new:
+                deps[new_name].add(old_to_new[base.id])
+    return deps
+
+def _toposort(deps):
+    ordered = []
+    temp = set()
+    perm = set()
+
+    def visit(n):
+        if n in perm:
+            return
+        if n in temp:
+            raise RuntimeError("Cyclic class dependency detected")
+        temp.add(n)
+        for m in deps.get(n, []):
+            visit(m)
+        temp.remove(n)
+        perm.add(n)
+        ordered.append(n)
+
+    for n in deps:
+        visit(n)
+    return ordered[::-1]  # bases first
+
+def _parse_module(module_path: Path):
+    code = module_path.read_text(encoding="utf-8")
+    tree = ast.parse(code)
+    imports = []
+    classes = {}
+    for node in tree.body:
+        if isinstance(node, (ast.Import, ast.ImportFrom)):
+            imports.append(node)
+        elif isinstance(node, ast.ClassDef):
+            classes[node.name] = node
+    return imports, classes
+
+def _resolve_base_name(base):
+    if isinstance(base, ast.Name):
+        return base.id
+    if isinstance(base, ast.Attribute):
+        return base.attr
+    return None
+
+def _resolve_imports(import_nodes):
+    out = {}
+    for node in import_nodes:
+        if isinstance(node, ast.ImportFrom) and node.module:
+            for n in node.names:
+                out[n.asname or n.name] = f"{node.module}.{n.name}"
+        elif isinstance(node, ast.Import):
+            for n in node.names:
+                out[n.asname or n.name] = n.name
+    return out
+
+# ------------------------------------------------------------
+# AST Renamer
+# ------------------------------------------------------------
+
+class RenameSymbols(ast.NodeTransformer):
+    def __init__(self, rename_map):
+        self.rename_map = rename_map
+
+    def visit_Name(self, node):
+        if node.id in self.rename_map:
+            return ast.copy_location(ast.Name(id=self.rename_map[node.id], ctx=node.ctx), node)
+        return node
+
+    def visit_Attribute(self, node):
+        self.generic_visit(node)
+        if isinstance(node.value, ast.Name) and node.value.id in self.rename_map:
+            node.value.id = self.rename_map[node.value.id]
+        return node
+
+    def visit_FunctionDef(self, node):
+        self.generic_visit(node)
+        if node.returns and isinstance(node.returns, ast.Name) and node.returns.id in self.rename_map:
+            node.returns.id = self.rename_map[node.returns.id]
+        return node
+
+    def visit_arg(self, node):
+        if node.annotation and isinstance(node.annotation, ast.Name):
+            if node.annotation.id in self.rename_map:
+                node.annotation.id = self.rename_map[node.annotation.id]
+        return node
+
+# ------------------------------------------------------------
+# Main function
+# ------------------------------------------------------------
+
+def _write_loc_payload(zf, locs: set, transfer_id: str):
+    settings = get_shared_data()
+    component_dir = Path(settings["component_dir"]).resolve()
+
+    # ------------------------------
+    # Step 1: Collect all classes recursively
+    # ------------------------------
+    collected = {}  # loc -> (class_name, cls_node, imports)
+
+    def collect_loc(loc: str):
+        if loc in collected or "." not in loc:
+            return
+
+        module_str, class_name = loc.rsplit(".", 1)
+        module_path = (component_dir / Path(*module_str.split("."))).with_suffix(".py")
+        if not module_path.exists():
+            return
+
+        imports, classes = _parse_module(module_path)
+        if class_name not in classes:
+            return
+
+        cls_node = deepcopy(classes[class_name])
+        collected[loc] = (class_name, cls_node, imports)
+
+        import_map = _resolve_imports(imports)
+
+        # recurse into base classes
+        for base in cls_node.bases:
+            base_name = _resolve_base_name(base)
+            if not base_name:
+                continue
+            if base_name in import_map:
+                base_loc = import_map[base_name]
+            else:
+                base_loc = f"{module_str}.{base_name}"
+            base_module = (component_dir / Path(*base_loc.split(".")[:-1])).with_suffix(".py")
+            if base_module.exists():
+                collect_loc(base_loc)
+
+    for loc in sorted(locs):
+        collect_loc(loc)
+
+    if not collected:
+        raise RuntimeError("No component classes found for provided LOCs")
+
+    # ------------------------------
+    # Step 2: Generate unique names + loc_map
+    # ------------------------------
+    old_to_new = {}
+    loc_map = {}
+    for loc, (class_name, _, _) in collected.items():
+        h = _loc_hash(loc)
+        new_name = f"{class_name}{h}"
+        old_to_new[class_name] = new_name
+        loc_map[loc] = f"{transfer_id}.{new_name}"
+
+    # ------------------------------
+    # Step 3: Topologically sort classes by base dependencies
+    # ------------------------------
+    deps = _class_dependencies(collected, old_to_new)
+    emit_order = _toposort(deps)
+    name_to_entry = {old_to_new[class_name]: (loc, class_name, cls_node, imports)
+                     for loc, (class_name, cls_node, imports) in collected.items()}
+
+    # ------------------------------
+    # Step 4: Rewrite ASTs with full renaming
+    # ------------------------------
+    renamer = RenameSymbols(old_to_new)
+    all_imports = set()
+    class_chunks = []
+
+    for new_name in emit_order:
+        loc, class_name, cls_node, imports = name_to_entry[new_name]
+        cls_node.name = new_name
+        cls_node = renamer.visit(cls_node)
+        ast.fix_missing_locations(cls_node)
+
+        for imp in imports:
+            all_imports.add(ast.unparse(imp))
+
+        mod = ast.Module(body=[cls_node], type_ignores=[])
+        ast.fix_missing_locations(mod)
+
+        class_chunks.append(f"# --- {loc} ---\n{ast.unparse(mod)}\n")
+
+    # ------------------------------
+    # Step 5: Write final .py file
+    # ------------------------------
+    imports_code = "\n".join(sorted(all_imports))
+    py_code = imports_code + "\n\n" + "\n\n".join(class_chunks[::-1])
+    py_name = f"{transfer_id}.py"
+    zf.writestr(py_name, py_code)
+
+    return loc_map
