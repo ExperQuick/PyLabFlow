@@ -3,7 +3,7 @@
 import pytest
 import os
 import json
-from plf1.lab import create_project, lab_setup
+from plf.lab import create_project, lab_setup
 
 @pytest.fixture(scope="session")
 def setup_lab_env(tmp_path_factory):
