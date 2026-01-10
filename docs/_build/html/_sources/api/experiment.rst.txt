@@ -3,13 +3,19 @@
 experiment
 ==========
 
+.. autoclass:: TransferContext
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :show-inheritance:
+
 .. autoclass:: PipeLine
    :members:
    :undoc-members:
    :inherited-members:
    :show-inheritance:
 
-.. automodule:: lwf.experiment
+.. automodule:: plf.experiment
    :members:
    :undoc-members:
    :inherited-members:

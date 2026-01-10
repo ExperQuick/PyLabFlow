@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>context &mdash; PyTorchLabFlow 1.0 documentation</title>
+  <title>context &mdash; PyLabFlow 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            PyTorchLabFlow
+            PyLabFlow
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -45,13 +45,14 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="../user_guide/quickstart.html">Quick Start</a></li>
 <li class="toctree-l1"><a class="reference internal" href="../user_guide/index.html">user guide</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="api.html">📚 API Reference</a><ul class="current">
 <li class="toctree-l2 current"><a class="current reference internal" href="#">context</a><ul>
-<li class="toctree-l3"><a class="reference internal" href="#lwf.context.get_caller"><code class="docutils literal notranslate"><span class="pre">get_caller()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lwf.context.get_shared_data"><code class="docutils literal notranslate"><span class="pre">get_shared_data()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lwf.context.register_libs_path"><code class="docutils literal notranslate"><span class="pre">register_libs_path()</span></code></a></li>
-<li class="toctree-l3"><a class="reference internal" href="#lwf.context.set_shared_data"><code class="docutils literal notranslate"><span class="pre">set_shared_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plf.context.get_caller"><code class="docutils literal notranslate"><span class="pre">get_caller()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plf.context.get_shared_data"><code class="docutils literal notranslate"><span class="pre">get_shared_data()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plf.context.register_libs_path"><code class="docutils literal notranslate"><span class="pre">register_libs_path()</span></code></a></li>
+<li class="toctree-l3"><a class="reference internal" href="#plf.context.set_shared_data"><code class="docutils literal notranslate"><span class="pre">set_shared_data()</span></code></a></li>
 </ul>
 </li>
 <li class="toctree-l2"><a class="reference internal" href="lab.html">lab</a></li>
@@ -68,7 +69,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">PyTorchLabFlow</a>
+          <a href="../index.html">PyLabFlow</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -87,15 +88,15 @@
           <div role="main" class="document" itemscope="itemscope" itemtype="http://schema.org/Article">
            <div itemprop="articleBody">
              
-  <section id="module-lwf.context">
-<span id="context"></span><h1>context<a class="headerlink" href="#module-lwf.context" title="Link to this heading"></a></h1>
+  <section id="module-plf.context">
+<span id="context"></span><h1>context<a class="headerlink" href="#module-plf.context" title="Link to this heading"></a></h1>
 <p>This module manages shared runtime context across different parts of an application.
 It tracks session-specific data, caller identification (e.g., Jupyter, scripts), and allows for
 runtime library path registration. It supports reproducibility, logging, and analysis by preserving
 contextual metadata during execution.</p>
 <dl class="py function">
-<dt class="sig sig-object py" id="lwf.context.get_caller">
-<span class="sig-name descname"><span class="pre">get_caller</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lwf/context.html#get_caller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lwf.context.get_caller" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="plf.context.get_caller">
+<span class="sig-name descname"><span class="pre">get_caller</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plf/context.html#get_caller"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plf.context.get_caller" title="Link to this definition"></a></dt>
 <dd><p>Identify the current session or script origin.
 Returns a string like ‘jupyter_session:&lt;id&gt;’ or ‘script:&lt;filename&gt;’.</p>
 <dl class="field-list simple">
@@ -106,8 +107,8 @@ Returns a string like ‘jupyter_session:&lt;id&gt;’ or ‘script:&lt;filename
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="lwf.context.get_shared_data">
-<span class="sig-name descname"><span class="pre">get_shared_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lwf/context.html#get_shared_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lwf.context.get_shared_data" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="plf.context.get_shared_data">
+<span class="sig-name descname"><span class="pre">get_shared_data</span></span><span class="sig-paren">(</span><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plf/context.html#get_shared_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plf.context.get_shared_data" title="Link to this definition"></a></dt>
 <dd><p>Retrieve the shared data dictionary associated with the current context.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Returns<span class="colon">:</span></dt>
@@ -120,8 +121,8 @@ Returns a string like ‘jupyter_session:&lt;id&gt;’ or ‘script:&lt;filename
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="lwf.context.register_libs_path">
-<span class="sig-name descname"><span class="pre">register_libs_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libs_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lwf/context.html#register_libs_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lwf.context.register_libs_path" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="plf.context.register_libs_path">
+<span class="sig-name descname"><span class="pre">register_libs_path</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">libs_dir</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plf/context.html#register_libs_path"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plf.context.register_libs_path" title="Link to this definition"></a></dt>
 <dd><p>Add a local library directory to Python’s sys.path if it exists.</p>
 <p>Useful for loading local modules dynamically without installing them system-wide.</p>
 <dl class="field-list simple">
@@ -138,8 +139,8 @@ Returns a string like ‘jupyter_session:&lt;id&gt;’ or ‘script:&lt;filename
 </dd></dl>
 
 <dl class="py function">
-<dt class="sig sig-object py" id="lwf.context.set_shared_data">
-<span class="sig-name descname"><span class="pre">set_shared_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/lwf/context.html#set_shared_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#lwf.context.set_shared_data" title="Link to this definition"></a></dt>
+<dt class="sig sig-object py" id="plf.context.set_shared_data">
+<span class="sig-name descname"><span class="pre">set_shared_data</span></span><span class="sig-paren">(</span><em class="sig-param"><span class="n"><span class="pre">data</span></span></em>, <em class="sig-param"><span class="n"><span class="pre">logid</span></span><span class="o"><span class="pre">=</span></span><span class="default_value"><span class="pre">None</span></span></em><span class="sig-paren">)</span><a class="reference internal" href="../_modules/plf/context.html#set_shared_data"><span class="viewcode-link"><span class="pre">[source]</span></span></a><a class="headerlink" href="#plf.context.set_shared_data" title="Link to this definition"></a></dt>
 <dd><p>Set the shared data dictionary for the current context.</p>
 <dl class="field-list simple">
 <dt class="field-odd">Parameters<span class="colon">:</span></dt>

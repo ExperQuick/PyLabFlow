@@ -3,6 +3,12 @@
 experiment
 ==========
 
+.. autoclass:: TransferContext
+   :members:
+   :undoc-members:
+   :inherited-members:
+   :show-inheritance:
+
 .. autoclass:: PipeLine
    :members:
    :undoc-members:

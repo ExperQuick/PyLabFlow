@@ -1,5 +1,5 @@
 """
-dummy
+Pipeline class  holder
 """
 
 from typing import TypedDict, Optional, Dict, Union, Any
@@ -14,10 +14,10 @@ from .utils import (
     hash_args,
     get_invalid_loc_queries,
     Db,
-    Component,
-)
-from .context import get_shared_data
+    Component)
 
+from ._transfer_utils import TransferContext
+from .context import get_shared_data
 
 class CompsDict(TypedDict):
     """
@@ -42,10 +42,11 @@ class PipeLine:
         Initialize the pipeline with default settings and empty components.
         """
         self._paths = ['config']
+        self.settings = get_shared_data()
 
         self.pplid = None
         self.workflow = None
-        self.settings = get_shared_data()
+        
         self.cnfg = None
         self._prepared = False
         self.__db = Db(db_path=f"{self.settings['data_path']}/ppls.db")
@@ -137,42 +138,26 @@ class PipeLine:
         os.makedirs(os.path.dirname(path), exist_ok=True)
         return path
 
-    def load(self, pplid: str, prepare: bool = False) -> None:
-        """
-        Load the experiment configuration and optionally prepare the pipeline.
-
-        Retrieves the configuration file associated with the given experiment ID and sets
-        it as the active configuration. Optionally, prepares the pipeline using the loaded
-        settings (e.g., model, data loaders, etc.).
-
-        Parameters
-        ----------
-        pplid : str
-            The experiment ID whose configuration is to be loaded.
-        prepare : bool, optional
-            Whether to immediately prepare the pipeline using the loaded configuration.
-            Defaults to False.
-
-        Raises
-        ------
-        ValueError
-            If the provided experiment ID does not exist in the experiment database.
-
-        Side Effects
-        ------------
-        - Sets `self.cnfg` with the loaded configuration dictionary.
-        - Updates `self.pplid` to the provided experiment ID.
-        - Calls `self.prepare()` if `prepare` is True.
-        """
+    def load(self, pplid: str, prepare: bool = False):
+        """Load a pipeline configuration from disk"""
         self.reset()
+
         if not self.verify(pplid=pplid):
-            raise ValueError(f"The pplid: {pplid} is not exists")
-        with open(self.get_path(of="config", pplid=pplid), encoding="utf-8") as cnfg:
-            cnfg = json.load(cnfg)
-        self.cnfg = cnfg
+            raise ValueError(f"The pplid: {pplid} does not exist")
+
+        cfg_path = self.get_path(of="config", pplid=pplid)
+        with open(cfg_path, encoding="utf-8") as f:
+            self.cnfg = json.load(f)
         self.pplid = pplid
+    
+
         if prepare:
             self.prepare()
+
+
+
+
+
 
     def reset(self):
         """
@@ -187,6 +172,11 @@ class PipeLine:
         self.__db = Db(db_path=f"{self.settings['data_path']}/ppls.db")
 
     def load_component(self,loc: str, args: Optional[Dict[str, Any]] = None, setup: bool = True):
+        if self.settings.get("lab_role") != "base":
+            Tsx = TransferContext()
+
+            loc = Tsx.map_loc(loc, pplid=self.pplid)
+
         comp =  load_component(loc=loc, args=args, setup=setup)
         comp.P = self
         return comp
@@ -282,6 +272,9 @@ class PipeLine:
         - Appends experiment metadata to the main experiments CSV.
         - Optionally calls `self.prepare()` if `prepare=True`.
         """
+        if self.settings.get("lab_role") != "base":
+            print("cant use new in remote lab")
+            return
         if self.verify(pplid=pplid):
             raise ValueError(f"{pplid} is already exists  try  different id")
         self._check_args(args)
@@ -333,8 +326,18 @@ class PipeLine:
         - Sets internal flag `_prepared` to True on success.
         """
         try:
+
+            if self.settings.get("lab_role") != "base":
+                Tsx = TransferContext()
+
+                self.cnfg = Tsx.map_cnfg(self.cnfg)
+
+
             self.workflow = self.load_component(**self.cnfg['workflow'])
             self._prepared = self.workflow.prepare()
+
+
+
         except:
             traceback.print_exc()
    
@@ -426,3 +429,6 @@ class PipeLine:
             return self.workflow.status()
         except:
             traceback.print_exc()
+
+from copy import deepcopy
+

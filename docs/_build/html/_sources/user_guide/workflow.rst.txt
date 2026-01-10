@@ -10,7 +10,7 @@ You can create a project using the `create_project` function:
 
 .. code-block:: python
 
-    from lwf.lab import create_project
+    from plf.lab import create_project
 
     settings = {
         "project_name": "my_experiment",
@@ -47,7 +47,7 @@ If a project already exists, you can **load it** using `lab_setup`:
 
 .. code-block:: python
 
-    from lwf.lab import lab_setup
+    from plf.lab import lab_setup
     lab_setup(settings_path)
 
 **What `lab_setup` does:**

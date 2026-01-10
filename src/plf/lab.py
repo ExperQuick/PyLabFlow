@@ -1,6 +1,7 @@
 """
-create or use uor lab
+create or use our lab
 """
+
 from pathlib import Path
 import os
 import json
@@ -8,10 +9,11 @@ from datetime import datetime
 from typing import Optional
 import pandas as pd
 
+
 from .context import set_shared_data, get_caller, register_libs_path, get_shared_data
 from .utils import Db
 
-__all__ = ["lab_setup", "create_project", "get_logs"]
+__all__ = ["lab_setup", "create_project", "get_logs", 'create_clone', 'init_clone']
  
 def export_settigns():
     settings = get_shared_data()
@@ -52,6 +54,13 @@ def create_project(settings: dict) -> str:
         if os.path.exists(db_path):
             os.remove(db_path)
 
+
+
+    base_dir = Path(data_path)
+
+    if base_dir.exists() and base_dir.is_dir():
+        new_folder = base_dir / "Clones"
+        new_folder.mkdir(exist_ok=True)
     # Setup DBs and shared data
     setup_databases(settings)
     set_shared_data(settings)
@@ -62,6 +71,15 @@ def create_project(settings: dict) -> str:
 
     return setting_path
 
+def create_and_init_db(db_path: str, tables: list, init_statements: list = None):
+    db = Db(db_path=db_path)
+    for table_sql in tables:
+        db.execute(table_sql)
+    if init_statements:
+        for stmt, params in init_statements:
+            db.execute(stmt, params)
+    db.close()
+
 def setup_databases(settings: dict):
     """
     Sets up the required databases for the lab project, including:
@@ -69,18 +87,6 @@ def setup_databases(settings: dict):
     - ppls.db (with ppls, edges, runnings tables)
     - Archived/ppls.db (with ppls table)
     """
-    from .utils import Db
-    from .context import get_caller
-
-    def create_and_init_db(db_path: str, tables: list, init_statements: list = None):
-        db = Db(db_path=db_path)
-        for table_sql in tables:
-            db.execute(table_sql)
-        if init_statements:
-            for stmt, params in init_statements:
-                db.execute(stmt, params)
-        db.close()
-
     # ---- logs.db ----
     logs_db_path = os.path.join(settings["data_path"], "logs.db")
     logs_table = """
@@ -143,7 +149,6 @@ def setup_databases(settings: dict):
     """
     create_and_init_db(archived_ppls_db_path, [archived_ppls_table])
 
-
 def lab_setup(settings_path: Optional[str]) -> None:
     if settings_path and os.path.exists(settings_path):
         with open(settings_path, encoding="utf-8") as sp:
@@ -172,6 +177,18 @@ def lab_setup(settings_path: Optional[str]) -> None:
     register_libs_path(settings["component_dir"])
    
 def get_logs():
+    """
+    Retrieve all log records from the logs database and return them as a DataFrame.
+
+    This function reads shared application settings to locate the SQLite
+    `logs.db` file, queries all rows from the `logs` table, and converts
+    the results into a pandas DataFrame with column names preserved.
+
+    Returns
+    -------
+    pandas.DataFrame
+        A DataFrame containing all records from the `logs` table.
+    """
     settings = get_shared_data()
     log_path = os.path.join(settings["data_path"], "logs.db")
     db = Db(db_path=log_path)
@@ -182,3 +199,118 @@ def get_logs():
     df = pd.DataFrame(rows, columns=col_names)
     return df
 
+
+
+def create_clone(name, desc="", clone_type="remote", clone_id=None):
+    """
+    Create a clone entry in BASE lab.
+
+    If clone_id is not provided, a unique one is generated automatically.
+    """
+    settings = get_shared_data()
+    clones_root = Path(settings["data_path"]) / "Clones"
+
+    # -----------------------------
+    # Generate unique clone_id
+    # -----------------------------
+    if clone_id is None:
+        while True:
+            clone_id = (
+                "cl_"
+                + datetime.utcnow().strftime("%Y%m%d_%H%M%S")
+                + "_"
+                + uuid4().hex[:6]
+            )
+            if not (clones_root / clone_id).exists():
+                break
+
+    clones_dir = clones_root / clone_id
+    clones_dir.mkdir(parents=True, exist_ok=False)
+
+    clone_cfg = {
+        "clone_id": clone_id,
+        "clone_type": clone_type,
+        "name": name,
+        "desc": desc,
+        "created_at": datetime.utcnow().isoformat(),
+        "transfers": []
+    }
+
+    with open(clones_dir / "clone.json", "w", encoding="utf-8") as f:
+        json.dump(clone_cfg, f, indent=4)
+
+    return clone_cfg
+
+
+
+def init_clone(
+    clone_config: dict,
+    data_path: str,
+    component_dir: str,
+):
+    
+    clone_id = clone_config["clone_id"]
+
+    # Absolute paths
+    data_path = os.path.abspath(data_path)
+    component_dir = os.path.abspath(component_dir)
+
+    # Project naming
+    project_name = f"remote_{clone_id}"
+    project_dir = os.path.dirname(data_path)
+
+    settings = {
+        # Identity
+        "lab_id": clone_id,
+        "lab_role": "remote",
+
+        # Project
+        "project_name": project_name,
+        "project_dir": project_dir,
+        "component_dir": component_dir,
+
+        # Runtime
+        "data_path": data_path,
+        "clone_config": clone_config,
+
+        # Transfer/runtime state
+        "transfer_context": None,
+        "created_at": datetime.utcnow().isoformat(),
+    }
+
+    # -----------------------------
+    # Create directories
+    # -----------------------------
+    os.makedirs(data_path, exist_ok=True)
+    os.makedirs(component_dir, exist_ok=True)
+
+    # Required runtime dirs
+    for d in [
+        "Transfers",
+        "TransfersOut",
+        "RemoteResults",
+        "Archived",
+    ]:
+        os.makedirs(os.path.join(data_path, d), exist_ok=True)
+
+    # -----------------------------
+    # Setup databases
+    # -----------------------------
+    setup_databases(settings)
+
+    # -----------------------------
+    # Persist settings
+    # -----------------------------
+    settings_path = os.path.join(data_path, f"{project_name}.json")
+    settings["setting_path"] = settings_path
+
+    with open(settings_path, "w", encoding="utf-8") as f:
+        json.dump(settings, f, indent=4)
+
+    # -----------------------------
+    # Activate lab
+    # -----------------------------
+    set_shared_data(settings)
+    register_libs_path(component_dir)
+
+    return settings_path
