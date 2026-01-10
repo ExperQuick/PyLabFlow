@@ -7,5 +7,5 @@ user guide
 
    concepts
    workflow
-   templates
+   tutorial
 

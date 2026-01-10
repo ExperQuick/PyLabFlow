@@ -147,18 +147,18 @@ which stores:
 4. Hierarchical View
 ------------------------------
 
-+-------------+-----------------------------------+----------------------------------------+
-| Level       | Represents                        | Purpose                                |
-+=============+===================================+========================================+
-| Component   | A single reusable operation       | Define atomic behavior (e.g., load,    |
-|             |                                   | preprocess, train, evaluate).          |
-+-------------+-----------------------------------+----------------------------------------+
-| Workflow    | A structured composition of       | Define *how* components connect.       |
-|             | components                        | Manage process logic and dependencies. |
-+-------------+-----------------------------------+----------------------------------------+
-| Pipeline    | A concrete, executable instance   | Execute and track a specific run.      |
++-------------+-----------------------------------+-------------------------------------------+
+| Level       | Represents                        | Purpose                                   |
++=============+===================================+===========================================+
+| Component   | A single reusable operation       | Define atomic behavior (e.g., load,       |
+|             |                                   | preprocess, train, evaluate).             |
++-------------+-----------------------------------+-------------------------------------------+
+| Workflow    | A structured composition of       | Define *how* components connect.          |
+|             | components                        | Manage process logic and dependencies.    |
++-------------+-----------------------------------+-------------------------------------------+
+| Pipeline    | A concrete, executable instance   | Execute and track a specific run.         |
 |             | of a workflow                     | Store results and ensure reproducibility. |
-+-------------+-----------------------------------+----------------------------------------+
++-------------+-----------------------------------+-------------------------------------------+
 
 Together, these layers create a **flexible, declarative, and traceable experimental system**
 that supports both **research iteration** and **production reproducibility**.

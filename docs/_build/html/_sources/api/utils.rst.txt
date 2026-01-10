@@ -3,7 +3,7 @@
 utils
 ======
 
-.. automodule:: lwf.utils
+.. automodule:: plf.utils
    :members:
    :undoc-members:
    :show-inheritance:

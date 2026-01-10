@@ -6,7 +6,7 @@
   <meta charset="utf-8" /><meta name="viewport" content="width=device-width, initial-scale=1" />
 
   <meta name="viewport" content="width=device-width, initial-scale=1.0" />
-  <title>User’s workflow doing experiments &mdash; PyTorchLabFlow 1.0 documentation</title>
+  <title>User’s workflow doing experiments &mdash; PyLabFlow 1.0 documentation</title>
       <link rel="stylesheet" type="text/css" href="../_static/pygments.css?v=b86133f3" />
       <link rel="stylesheet" type="text/css" href="../_static/css/theme.css?v=e59714d7" />
 
@@ -20,7 +20,7 @@
     <script src="../_static/js/theme.js"></script>
     <link rel="index" title="Index" href="../genindex.html" />
     <link rel="search" title="Search" href="../search.html" />
-    <link rel="next" title="Templates" href="templates.html" />
+    <link rel="next" title="📚 API Reference" href="../api/api.html" />
     <link rel="prev" title="Framework Overview" href="concepts.html" /> 
 </head>
 
@@ -33,7 +33,7 @@
           
           
           <a href="../index.html" class="icon icon-home">
-            PyTorchLabFlow
+            PyLabFlow
           </a>
 <div role="search">
   <form id="rtd-search-form" class="wy-form" action="../search.html" method="get">
@@ -45,6 +45,7 @@
         </div><div class="wy-menu wy-menu-vertical" data-spy="affix" role="navigation" aria-label="Navigation menu">
               <p class="caption" role="heading"><span class="caption-text">Contents:</span></p>
 <ul class="current">
+<li class="toctree-l1"><a class="reference internal" href="quickstart.html">Quick Start</a></li>
 <li class="toctree-l1 current"><a class="reference internal" href="index.html">user guide</a><ul class="current">
 <li class="toctree-l2"><a class="reference internal" href="concepts.html">Framework Overview</a></li>
 <li class="toctree-l2 current"><a class="current reference internal" href="#">User’s workflow doing experiments</a><ul>
@@ -52,7 +53,6 @@
 <li class="toctree-l3"><a class="reference internal" href="#accessing-an-existing-project">Accessing an Existing Project</a></li>
 </ul>
 </li>
-<li class="toctree-l2"><a class="reference internal" href="templates.html">Templates</a></li>
 </ul>
 </li>
 <li class="toctree-l1"><a class="reference internal" href="../api/api.html">📚 API Reference</a></li>
@@ -65,7 +65,7 @@
 
     <section data-toggle="wy-nav-shift" class="wy-nav-content-wrap"><nav class="wy-nav-top" aria-label="Mobile navigation menu" >
           <i data-toggle="wy-nav-top" class="fa fa-bars"></i>
-          <a href="../index.html">PyTorchLabFlow</a>
+          <a href="../index.html">PyLabFlow</a>
       </nav>
 
       <div class="wy-nav-content">
@@ -90,7 +90,7 @@
 <section id="creating-a-project">
 <h2>Creating a Project<a class="headerlink" href="#creating-a-project" title="Link to this heading"></a></h2>
 <p>You can create a project using the <cite>create_project</cite> function:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lwf.lab</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_project</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plf.lab</span><span class="w"> </span><span class="kn">import</span> <span class="n">create_project</span>
 
 <span class="n">settings</span> <span class="o">=</span> <span class="p">{</span>
     <span class="s2">&quot;project_name&quot;</span><span class="p">:</span> <span class="s2">&quot;my_experiment&quot;</span><span class="p">,</span>
@@ -123,7 +123,7 @@ Registers paths and project metadata globally so all parts of the framework can 
 <section id="accessing-an-existing-project">
 <h2>Accessing an Existing Project<a class="headerlink" href="#accessing-an-existing-project" title="Link to this heading"></a></h2>
 <p>If a project already exists, you can <strong>load it</strong> using <cite>lab_setup</cite>:</p>
-<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">lwf.lab</span><span class="w"> </span><span class="kn">import</span> <span class="n">lab_setup</span>
+<div class="highlight-python notranslate"><div class="highlight"><pre><span></span><span class="kn">from</span><span class="w"> </span><span class="nn">plf.lab</span><span class="w"> </span><span class="kn">import</span> <span class="n">lab_setup</span>
 <span class="n">lab_setup</span><span class="p">(</span><span class="n">settings_path</span><span class="p">)</span>
 </pre></div>
 </div>
@@ -148,7 +148,7 @@ Registers paths and project metadata globally so all parts of the framework can 
           </div>
           <footer><div class="rst-footer-buttons" role="navigation" aria-label="Footer">
         <a href="concepts.html" class="btn btn-neutral float-left" title="Framework Overview" accesskey="p" rel="prev"><span class="fa fa-arrow-circle-left" aria-hidden="true"></span> Previous</a>
-        <a href="templates.html" class="btn btn-neutral float-right" title="Templates" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
+        <a href="../api/api.html" class="btn btn-neutral float-right" title="📚 API Reference" accesskey="n" rel="next">Next <span class="fa fa-arrow-circle-right" aria-hidden="true"></span></a>
     </div>
 
   <hr/>

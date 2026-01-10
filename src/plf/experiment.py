@@ -11,11 +11,11 @@ import pandas as pd
 
 from .context import get_shared_data
 from .utils import Db, filter_configs, get_matching, is_comp
-from ._pipeline import PipeLine
+from ._pipeline import PipeLine, TransferContext
 
 
 __all__ = [
-    "PipeLine",
+    "PipeLine","TransferContext",
     "get_ppls",
     "get_ppl_details",
     "get_ppl_status",
