@@ -158,6 +158,15 @@ def lab_setup(settings_path: Optional[str]) -> None:
     if settings_path and os.path.exists(settings_path):
         with open(settings_path, encoding="utf-8") as sp:
             settings = json.load(sp)
+
+        # Check if 'lab_role' exists in settings; add default if missing
+        if "lab_role" not in settings:
+            settings["lab_role"] = "base"  # or some default value
+            # Update the JSON settings file
+            settings_path = settings.get("settings_path")
+            if settings_path:
+                with open(settings_path, "w") as f:
+                    json.dump(settings, f, indent=4)
     else:
         raise ValueError("Provide either settings_path or settings for lab setup")
 

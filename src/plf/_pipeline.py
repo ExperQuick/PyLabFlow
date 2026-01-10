@@ -17,7 +17,7 @@ from .utils import (
     Component)
 
 from ._transfer_utils import TransferContext
-from .context import get_shared_data
+from .context import get_shared_data, set_shared_data
 
 class CompsDict(TypedDict):
     """
@@ -172,6 +172,7 @@ class PipeLine:
         self.__db = Db(db_path=f"{self.settings['data_path']}/ppls.db")
 
     def load_component(self,loc: str, args: Optional[Dict[str, Any]] = None, setup: bool = True):
+        #  if lab_role nopt exists  then  add the key in   json file   at  self.settings['settings_path]
         if self.settings.get("lab_role") != "base":
             Tsx = TransferContext()
 
