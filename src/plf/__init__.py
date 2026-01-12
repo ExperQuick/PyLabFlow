@@ -12,7 +12,7 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-LwFlow
+PyLabFlow
 ==============
 
 This is your go-to offlinesolution for managingPyTorch experimentswith ease.
@@ -20,17 +20,15 @@ Run experiments securely on your local machine, no data sharing with 3rd parties
 Need more power? Seamlesslytrasfer your setup to a high-end system without any reconfiguration.
 Wheather you are on a laptop or a workstation, LwFlow ensures flexibility and privacy,
 allowingyou to experiment anywhere, anytime, without internet dependency.
-[Read more at github](https://github.com/ExperQuick/LwFlow)
+[Read more at github](https://github.com/ExperQuick/PyLabFlow)
 
 
 """
 __all__ = [
-    "analysis",
     "context",
     "evaluate",
     "experiment",
     "utils",
-    "graphs",
-    "lab",
+    "lab","danger"
 ]
 
