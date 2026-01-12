@@ -151,6 +151,11 @@ class Component(ABC):
         
         traceback.print_exc()
         raise ValueError(f"Arguments {args} are incompatible with '{self.loc}'")
+    
+    @property
+    def source(self):
+        from inspect import getsource
+        return getsource(self.__class__)
         
     
     @abstractmethod
