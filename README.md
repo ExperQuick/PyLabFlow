@@ -195,3 +195,25 @@ The `plf.experiment` module provides powerful tools for managing your PPL databa
 ## 📜 License
 
 This project is licensed under the **Apache License 2.0**.  © 2025 BBEK Anand
+
+
+
+
+If you use PyLabFlow in your research, please consider citing it's ititial version:
+
+```bibtex
+@article{Hati2025PyTorchLabFlow,
+  title={PyTorchLabFlow: A Local-First Framework for Reproducible Deep Learning Experiments},
+  author={Bibekananda Hati and Yogeshwar Singh Dadwhal},
+  journal={Journal of Applied Bioanalysis},
+  volume={11},
+  number={S6},
+  pages={538--546},
+  year={2025},
+  doi={10.53555/jab.v11si6.1940},
+  url={https://doi.org/10.53555/jab.v11si6.1940}
+}
+
+
+```
+
