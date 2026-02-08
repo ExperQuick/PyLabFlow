@@ -1,4 +1,4 @@
-# Copyright 2024 BBEK Anand
+# Copyright 2025 BBEK Anand
 #
 # Licensed under the Apache License, Version 2.0 (the "License");
 # you may not use this file except in compliance with the License.
@@ -12,25 +12,23 @@
 # See the License for the specific language governing permissions and
 # limitations under the License.
 """
-LwFlow
+PyLabFlow
 ==============
 
-This is your go-to offlinesolution for managingPyTorch experimentswith ease.
+This is your go-to offline solution for managing experiments with ease.
 Run experiments securely on your local machine, no data sharing with 3rd parties.
 Need more power? Seamlesslytrasfer your setup to a high-end system without any reconfiguration.
 Wheather you are on a laptop or a workstation, LwFlow ensures flexibility and privacy,
 allowingyou to experiment anywhere, anytime, without internet dependency.
-[Read more at github](https://github.com/ExperQuick/LwFlow)
+[Read more at github](https://github.com/ExperQuick/PyLabFlow)
 
 
 """
 __all__ = [
-    "analysis",
     "context",
-    "evaluate",
     "experiment",
     "utils",
-    "graphs",
     "lab",
+    "danger"
 ]
 

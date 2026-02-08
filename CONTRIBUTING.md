@@ -10,12 +10,24 @@ By participating in this project, you are expected to uphold our [Code of Conduc
 
 ## How Can I Contribute?
 
-There are many ways to contribute, and all of them are valuable.
+There are many ways to contribute to PyLabFlow, and every contribution matters.
 
-* **🐛 Reporting Bugs**: If you find a bug, please open an issue and provide as much detail as possible.
-* **💡 Suggesting Enhancements**: Have an idea for a new feature or an improvement to an existing one? Open an issue to start a discussion.
-* **📝 Improving Documentation**: If you find parts of the documentation unclear or incorrect, you can suggest changes or submit a pull request.
-* **💻 Writing Code**: Help us fix bugs or add new features by submitting a pull request.
+* **🐛 Report Bugs**
+  Found a bug? Open an issue and include clear steps, logs, or screenshots if possible.
+
+* **💡 Suggest Enhancements**
+  Have ideas for new features or improvements? Start a discussion by opening an issue.
+
+* **📝 Improve Documentation**
+  Help make the docs clearer by fixing mistakes, adding explanations, or improving examples.
+
+* **🧪 Write Test Cases**
+  Strengthen the project by adding or improving tests to ensure reliability.
+
+* **💻 Contribute Code**
+  Fix bugs or implement new features by submitting a pull request.
+
+Every contribution—big or small—helps improve the project 🚀
 
 ## Your First Contribution
 
