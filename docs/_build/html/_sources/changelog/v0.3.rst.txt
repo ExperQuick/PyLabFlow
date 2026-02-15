@@ -1,9 +1,0 @@
-v0.3
-====
-
-supporting seamless transfer of experiments(ppls) accross system.
-
-added   `clone in lab <../api/lab.html#plf.lab.lab_clone>`_
-
-
-added  `transfer loc & src mapping  in PipeLine <../api/_pipeline.html#plf._pipeline.PipeLine>`_

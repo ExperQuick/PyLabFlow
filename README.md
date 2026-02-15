@@ -53,7 +53,11 @@ Alternatively, clone the repository for development purposes:
 ```
 
 git clone https://github.com/ExperQuick/PyLabFlow.git
+```
+```
 cd PyLabFlow
+```
+```
 pip install -e .
 
 ````

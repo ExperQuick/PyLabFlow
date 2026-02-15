@@ -16,6 +16,7 @@ extensions = [
     'sphinx.ext.autodoc',
     'sphinx.ext.napoleon',       # for Google/Numpy-style docstrings
     'sphinx.ext.viewcode',
+    'sphinx_copybutton'
 ]
 
 templates_path = ['_templates']
