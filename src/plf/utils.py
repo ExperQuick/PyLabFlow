@@ -1,6 +1,7 @@
 """
 This module provides
 """
+
 from pathlib import Path
 import sys
 import os
@@ -27,8 +28,8 @@ __all__ = [
     "Db",
     "extract_all_locs",
     "get_invalid_loc_queries",
-    'filter_configs',
-    'get_matching'
+    "filter_configs",
+    "get_matching",
 ]
 
 
@@ -42,36 +43,36 @@ def load_component(
     loc: str, args: Optional[Dict[str, Any]] = None, setup: bool = True
 ) -> Callable:
     """
-        Dynamically load and optionally initialize a component class.
+    Dynamically load and optionally initialize a component class.
 
-        This utility imports a class from a given module path and instantiates it.
-        If the class defines a `setup` method and `setup=True`, it calls `setup(args)`
-        and returns the initialized component. Otherwise, it returns the raw instance.
+    This utility imports a class from a given module path and instantiates it.
+    If the class defines a `setup` method and `setup=True`, it calls `setup(args)`
+    and returns the initialized component. Otherwise, it returns the raw instance.
 
-        Parameters
-        ----------
-        loc : str
-            Fully qualified class location in dot notation (e.g., 'CompBase.models.MyModel').
-            If no dot is present, it is assumed the class is defined in `__main__`.
+    Parameters
+    ----------
+    loc : str
+        Fully qualified class location in dot notation (e.g., 'CompBase.models.MyModel').
+        If no dot is present, it is assumed the class is defined in `__main__`.
 
-        args : dict, optional
-            Dictionary of arguments to pass to the `setup()` method, if applicable.
-            Defaults to an empty dict.
+    args : dict, optional
+        Dictionary of arguments to pass to the `setup()` method, if applicable.
+        Defaults to an empty dict.
 
-        setup : bool, optional
-            Whether to invoke the component’s `setup` method after instantiation. Defaults to True.
+    setup : bool, optional
+        Whether to invoke the component’s `setup` method after instantiation. Defaults to True.
 
-        Returns
-        -------
-        Any
-            An instance of the loaded class, either raw or configured via `setup()`.
+    Returns
+    -------
+    Any
+        An instance of the loaded class, either raw or configured via `setup()`.
 
-        Raises
-        ------
-        ComponentLoadError
-            If the specified class is not found in the target module.
-        ImportError
-            If the module cannot be imported.
+    Raises
+    ------
+    ComponentLoadError
+        If the specified class is not found in the target module.
+    ImportError
+        If the module cannot be imported.
     """
     args = args or {}
 
@@ -108,20 +109,22 @@ def load_component(
 
 class Component(ABC):
     """
-        Base class for all components with dynamic loading capability.
+    Base class for all components with dynamic loading capability.
 
-        Attributes:
-            loc (str): Location identifier for the component.
-            args (dict): Expected keys for arguments.
+    Attributes:
+        loc (str): Location identifier for the component.
+        args (dict): Expected keys for arguments.
     """
 
     def __init__(self, loc: str = None):
         self.loc = self.__class__.__name__ if loc is None else loc
         self.args = {}
         self.P = None
-    
-    def load_component(self, loc: str, args: Optional[Dict[str, Any]] = None, setup: bool = True):
-        comp =  load_component(loc=loc, args=args,setup=setup)
+
+    def load_component(
+        self, loc: str, args: Optional[Dict[str, Any]] = None, setup: bool = True
+    ):
+        comp = load_component(loc=loc, args=args, setup=setup)
         comp.P = self.P
         return comp
 
@@ -131,13 +134,13 @@ class Component(ABC):
 
     def setup(self, args: Dict[str, Any]) -> Optional[Any]:
         """
-            Set up the component with provided arguments.
+        Set up the component with provided arguments.
 
-            Args:
-                args: Dictionary of arguments to initialize the component.
+        Args:
+            args: Dictionary of arguments to initialize the component.
 
-            Returns:
-                Optional[Any]: Initialized component or setup result.
+        Returns:
+            Optional[Any]: Initialized component or setup result.
         """
         if self.check_args(args):
             # print(154,args)
@@ -148,32 +151,32 @@ class Component(ABC):
                 raise AttributeError(
                     f"Component '{self.loc}' does not implement '_setup'"
                 ) from exc
-        
+
         traceback.print_exc()
         raise ValueError(f"Arguments {args} are incompatible with '{self.loc}'")
-        
-    
+
     @abstractmethod
-    def _setup(self, args: Dict[str, Any],P=None) -> Optional[Any]:
+    def _setup(self, args: Dict[str, Any], P=None) -> Optional[Any]:
         """
-            Private setup to be overridden in subclasses.
+        Private setup to be overridden in subclasses.
 
-            Args:
-                args: Dictionary of arguments.
+        Args:
+            args: Dictionary of arguments.
 
-            Returns:
-                Optional[Any]
+        Returns:
+            Optional[Any]
         """
         raise NotImplementedError(f"Component '{self.loc}' must implement '_setup'")
+
 
 class WorkFlow(Component, ABC):
     """
     Abstract base class for all workflows.
 
-    Workflows are intended to be managed by the `PipeLine` class. 
+    Workflows are intended to be managed by the `PipeLine` class.
     When a pipeline is created via `PipeLine.new()`, it takes a workflow configuration,
-    instantiates the workflow, and passes the workflow-specific arguments to it. 
-    Therefore, all required workflow parameters should be validated at this point 
+    instantiates the workflow, and passes the workflow-specific arguments to it.
+    Therefore, all required workflow parameters should be validated at this point
     using the workflow's template.
 
     ----------------------------
@@ -264,13 +267,11 @@ class WorkFlow(Component, ABC):
         This ensures that when a pipeline is transferred, all artifacts are correctly located.
         """
 
-
     def clean(self):
         """
         Clean up temporary files, cached outputs, or intermediate artifacts.
         """
         pass
-
 
     def status(self) -> str:
         """
@@ -278,19 +279,21 @@ class WorkFlow(Component, ABC):
         """
         return {}
 
+
 def is_comp(x):
     if isinstance(x, dict) and "loc" in x and "args" in x:
         return True
-  
+
+
 class Db:
     """
-        Lightweight SQLite wrapper with foreign key enforcement.
+    Lightweight SQLite wrapper with foreign key enforcement.
 
-        Args:
-            db_path (str): Path to the SQLite database file.
+    Args:
+        db_path (str): Path to the SQLite database file.
 
-        Raises:
-            FileNotFoundError: If the directory for the DB path doesn't exist.
+    Raises:
+        FileNotFoundError: If the directory for the DB path doesn't exist.
     """
 
     def __init__(self, db_path: str):
@@ -357,34 +360,37 @@ class Db:
     def __exit__(self, exc_type, exc_val, exc_tb):
         self.close()
 
+
 def hash_args(args: Dict[str, Any]) -> str:
     """
-        Generate a SHA-256 hash from a dictionary of arguments.
+    Generate a SHA-256 hash from a dictionary of arguments.
 
-        This is commonly used to uniquely identify a configuration or set of parameters.
+    This is commonly used to uniquely identify a configuration or set of parameters.
 
-        Parameters
-        ----------
-        args : dict
-            The dictionary of arguments to be hashed. Must be JSON-serializable.
+    Parameters
+    ----------
+    args : dict
+        The dictionary of arguments to be hashed. Must be JSON-serializable.
 
-        Returns
-        -------
-        str
-            A SHA-256 hash string representing the input dictionary.
+    Returns
+    -------
+    str
+        A SHA-256 hash string representing the input dictionary.
 
-        Raises
-        ------
-        TypeError
-        If the dictionary contains non-serializable values.
+    Raises
+    ------
+    TypeError
+    If the dictionary contains non-serializable values.
     """
     dict_str = json.dumps(args, sort_keys=True, separators=(",", ":"))
     # print(dict_str)
-    hhas  = hashlib.sha256(dict_str.encode()).hexdigest()
+    hhas = hashlib.sha256(dict_str.encode()).hexdigest()
     # print(hhas)
     return hhas
 
+
 from typing import Union, Dict, List, Any
+
 
 def extract_all_locs(d: Union[Dict, List]) -> List[str]:
     """
@@ -410,7 +416,9 @@ def extract_all_locs(d: Union[Dict, List]) -> List[str]:
 
     return locs
 
+
 from typing import Union, Dict, List
+
 
 def get_invalid_loc_queries(d: Union[Dict, List], parent_key: str = "") -> List[str]:
     """
@@ -453,6 +461,7 @@ def get_invalid_loc_queries(d: Union[Dict, List], parent_key: str = "") -> List[
             queries.extend(get_invalid_loc_queries(item, item_key))
 
     return queries
+
 
 def _flatten_nested_locs(data: Dict[str, Any]) -> Dict[str, Any]:
     """
@@ -579,6 +588,7 @@ def filter_configs(
         return pd.DataFrame.from_dict(data, orient="index")
     return list(data.keys())
 
+
 def get_matching(
     base_id: str,
     get_ids_fn: Callable[[], List[str]],
@@ -653,4 +663,3 @@ def get_matching(
         for i in result:
             result[i] += [base_id]
     return result
-

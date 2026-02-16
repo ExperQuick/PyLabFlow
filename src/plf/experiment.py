@@ -13,9 +13,9 @@ from .context import get_shared_data
 from .utils import Db, filter_configs, get_matching, is_comp
 from ._pipeline import PipeLine, TransferContext
 
-
 __all__ = [
-    "PipeLine","TransferContext",
+    "PipeLine",
+    "TransferContext",
     "get_ppls",
     "get_ppl_details",
     "get_ppl_status",
@@ -23,7 +23,7 @@ __all__ = [
     "delete_ppl",
     "transfer_ppl",
     "group_by_common_columns",
-    'filter_ppls'
+    "filter_ppls",
 ]
 
 
@@ -43,20 +43,21 @@ def get_ppls() -> List[str]:
     return rows
 
 
-
 def get_ppl_details(ppls: Optional[list] = None) -> pd.DataFrame:
     ppls = get_ppls() if ppls is None else ppls
     records = {}
 
     for pplid in ppls:
         P = PipeLine(pplid=pplid)
-        wf = P.cnfg['workflow'].get('loc', f"workflow_{pplid}")  # fallback if 'loc' missing
+        wf = P.cnfg["workflow"].get(
+            "loc", f"workflow_{pplid}"
+        )  # fallback if 'loc' missing
 
-        P.workflow = P.load_component(**P.cnfg['workflow'])
+        P.workflow = P.load_component(**P.cnfg["workflow"])
         data = {}
         for comp_name in P.workflow.template:
-            comp_cfg = P.cnfg['args'][comp_name]
-            data[comp_name] = comp_cfg['loc'] if is_comp(comp_cfg) else comp_cfg
+            comp_cfg = P.cnfg["args"][comp_name]
+            data[comp_name] = comp_cfg["loc"] if is_comp(comp_cfg) else comp_cfg
 
         # Save data under this workflow and pipeline ID
         if wf not in records:
@@ -65,7 +66,7 @@ def get_ppl_details(ppls: Optional[list] = None) -> pd.DataFrame:
 
     # Convert each workflow's dict of pipeline data to a DataFrame
     for wf_key in records:
-        records[wf_key] = pd.DataFrame.from_dict(records[wf_key], orient='index')
+        records[wf_key] = pd.DataFrame.from_dict(records[wf_key], orient="index")
 
     # If only one workflow, return its DataFrame directly
     if len(records) == 1:
@@ -74,14 +75,16 @@ def get_ppl_details(ppls: Optional[list] = None) -> pd.DataFrame:
     # Otherwise, return dict of DataFrames keyed by workflow
     return records
 
+
 def get_ppl_status(ppls: Optional[list] = None) -> pd.DataFrame:
-    data = { }
+    data = {}
     ppls = get_ppls() if ppls is None else ppls
     for i in ppls:
         P = PipeLine(pplid=i)
         data[i] = P.status()
-    df = pd.DataFrame.from_dict(data, orient='index')
+    df = pd.DataFrame.from_dict(data, orient="index")
     return df
+
 
 def multi_run(ppls: Dict[str, int], last_epoch: int = 10, patience: int = 5) -> None:
     """
@@ -109,6 +112,7 @@ def multi_run(ppls: Dict[str, int], last_epoch: int = 10, patience: int = 5) -> 
         P.prepare()
         P.run()
 
+
 def get_runnings():
     db = Db(db_path=f"{PipeLine().settings['data_path']}/ppls.db")
 
@@ -118,6 +122,7 @@ def get_runnings():
 
     df = pd.DataFrame(rows, columns=col_names)
     return df
+
 
 def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
     """
@@ -175,10 +180,14 @@ def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
                 print(f"Missing config: {src_cfg}")
 
             # Database copy
-            rows = db.query("SELECT pplid, args_hash FROM ppls WHERE pplid = ?", (pplid,))
+            rows = db.query(
+                "SELECT pplid, args_hash FROM ppls WHERE pplid = ?", (pplid,)
+            )
             if rows:
                 db1 = Db(db_path=os.path.join(destin, "ppls.db"))
-                db1.execute("INSERT INTO ppls (pplid, args_hash) VALUES (?, ?)", rows[0])
+                db1.execute(
+                    "INSERT INTO ppls (pplid, args_hash) VALUES (?, ?)", rows[0]
+                )
                 db1.close()
 
             # Delete original DB record only after all moves succeed
@@ -200,6 +209,7 @@ def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
 
         finally:
             db.close()
+
 
 def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
 
@@ -229,22 +239,26 @@ def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
             if not reverse:
 
                 df = get_runnings()
-                if pplid in df['pplid']:
+                if pplid in df["pplid"]:
                     print(f"pplid: {pplid} is running ")
-                    print(df[df['pplid']==pplid].values)
+                    print(df[df["pplid"] == pplid].values)
                     continue
 
             # Prepare pipeline
             P = PipeLine()
             if reverse:
-                cfg_path = os.path.join(data_path, "Archived", "Configs", f"{pplid}.json")
+                cfg_path = os.path.join(
+                    data_path, "Archived", "Configs", f"{pplid}.json"
+                )
                 if not os.path.exists(cfg_path):
                     print(f"Missing archived config for {pplid}: {cfg_path}")
                     continue
                 with open(cfg_path) as fl:
                     P.cnfg = json.load(fl)
-                    P.pplid = P.cnfg['pplid']
-                    P.settings['data_path'] = os.path.join(P.settings['data_path'], "Archived")
+                    P.pplid = P.cnfg["pplid"]
+                    P.settings["data_path"] = os.path.join(
+                        P.settings["data_path"], "Archived"
+                    )
             else:
                 P.load(pplid=pplid)
 
@@ -274,13 +288,19 @@ def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
                     print(f"Missing file: {src}")
 
             # DB transfer
-            rows = db.query("SELECT pplid, args_hash FROM ppls WHERE pplid = ?", (pplid,))
+            rows = db.query(
+                "SELECT pplid, args_hash FROM ppls WHERE pplid = ?", (pplid,)
+            )
             if not rows:
                 print(f"{pplid} not found in DB.")
             else:
-                dest_db_path = os.path.join(data_path, "" if reverse else "Archived", "ppls.db")
+                dest_db_path = os.path.join(
+                    data_path, "" if reverse else "Archived", "ppls.db"
+                )
                 dest_db = Db(db_path=dest_db_path)
-                dest_db.execute("INSERT INTO ppls (pplid, args_hash) VALUES (?, ?)", rows[0])
+                dest_db.execute(
+                    "INSERT INTO ppls (pplid, args_hash) VALUES (?, ?)", rows[0]
+                )
                 dest_db.close()
                 db.execute("DELETE FROM ppls WHERE pplid = ?", (pplid,))
 
@@ -299,9 +319,10 @@ def archive_ppl(ppls: List[str], reverse: bool = False) -> None:
         finally:
             db.close()
 
+
 def filter_ppls(
-        query: str, ppls: Optional[List[str]] = None, params: bool = False
-    ) -> list:
+    query: str, ppls: Optional[List[str]] = None, params: bool = False
+) -> list:
     """
     Filters pipelines based on a query string applied to their configurations.
 
@@ -328,9 +349,10 @@ def filter_ppls(
 
     return filter_configs(query, ppls, loader, params)
 
+
 def get_matching_ppls(
-        base_pplid: str, query: Optional[str] = None, include=False
-    ) -> List:
+    base_pplid: str, query: Optional[str] = None, include=False
+) -> List:
     """
     Retrieve pipelines matching a base pipeline ID and optional query.
 
@@ -364,6 +386,7 @@ def get_matching_ppls(
 import os
 import shutil
 from typing import List
+
 
 def delete_ppl(ppls: List[str]) -> None:
     """
@@ -424,30 +447,31 @@ def delete_ppl(ppls: List[str]) -> None:
 
     db.close()
 
+
 def transfer_ppl(
     ppls: List[str], transfer_type: str = "export", mode: str = "copy", env=True
 ) -> None:
     """
-        Transfers pipeline data between main storage and transfer folder.
+    Transfers pipeline data between main storage and transfer folder.
 
-        Args
-        ----
-            ppls (list[str]): List of pipeline IDs to transfer.
-            transfer_type (str, optional): Type of transfer, either 'export' (default) or 'import'.
-                'export' moves data from main storage to transfer folder,
-                'import' moves data from transfer folder back to main storage.
-            mode (str, optional): Transfer mode, either 'copy' (default) or 'move'.
-                'copy' duplicates files, 'move' relocates files.
-        
+    Args
+    ----
+        ppls (list[str]): List of pipeline IDs to transfer.
+        transfer_type (str, optional): Type of transfer, either 'export' (default) or 'import'.
+            'export' moves data from main storage to transfer folder,
+            'import' moves data from transfer folder back to main storage.
+        mode (str, optional): Transfer mode, either 'copy' (default) or 'move'.
+            'copy' duplicates files, 'move' relocates files.
 
-        Raises
-        ------
-            ValueError: If `transfer_type` or `mode` is invalid,
-                        or if any pipeline ID is not found in the source records.
 
-        Returns
-        -------
-            None
+    Raises
+    ------
+        ValueError: If `transfer_type` or `mode` is invalid,
+                    or if any pipeline ID is not found in the source records.
+
+    Returns
+    -------
+        None
     """
 
     settings = get_shared_data()
@@ -517,32 +541,32 @@ def transfer_ppl(
 
 def group_by_common_columns(
     records: Dict[str, pd.DataFrame],
-    ) -> Dict[frozenset, List[str]]:
+) -> Dict[frozenset, List[str]]:
     """
-        Group pipeline records by their common set of DataFrame columns.
+    Group pipeline records by their common set of DataFrame columns.
 
-        Parameters
-        ----------
-            records (dict): A dictionary where keys are pipeline IDs and values are pandas DataFrames
-                            (e.g., training histories with various metrics).
+    Parameters
+    ----------
+        records (dict): A dictionary where keys are pipeline IDs and values are pandas DataFrames
+                        (e.g., training histories with various metrics).
 
-        Returns
-        -------
-            dict: A dictionary mapping each unique set of column names (as a `frozenset`) to a list of
-                pipeline IDs sharing that column structure.
+    Returns
+    -------
+        dict: A dictionary mapping each unique set of column names (as a `frozenset`) to a list of
+            pipeline IDs sharing that column structure.
 
-        Example
-        -------
-            >>> records = {
-            ...     "exp1": pd.DataFrame(columns=["epoch", "train_loss", "val_loss"]),
-            ...     "exp2": pd.DataFrame(columns=["epoch", "train_loss", "val_loss"]),
-            ...     "exp3": pd.DataFrame(columns=["epoch", "accuracy", "val_accuracy"])
-            ... }
-            >>> group_by_common_columns(records)
-            {
-                frozenset({'epoch', 'train_loss', 'val_loss'}): ['exp1', 'exp2'],
-                frozenset({'epoch', 'accuracy', 'val_accuracy'}): ['exp3']
-            }
+    Example
+    -------
+        >>> records = {
+        ...     "exp1": pd.DataFrame(columns=["epoch", "train_loss", "val_loss"]),
+        ...     "exp2": pd.DataFrame(columns=["epoch", "train_loss", "val_loss"]),
+        ...     "exp3": pd.DataFrame(columns=["epoch", "accuracy", "val_accuracy"])
+        ... }
+        >>> group_by_common_columns(records)
+        {
+            frozenset({'epoch', 'train_loss', 'val_loss'}): ['exp1', 'exp2'],
+            frozenset({'epoch', 'accuracy', 'val_accuracy'}): ['exp3']
+        }
     """
     cols = {k: frozenset(v.columns) for k, v in records.items()}
     group_map = defaultdict(list)

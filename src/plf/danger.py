@@ -1,6 +1,7 @@
 from .utils import Db
 from .experiment import get_ppls, PipeLine
 
+
 def corrupt_ppl(pplid: str):
     """
     Deletes a record from the 'ppls' table in the SQLite database if the provided
@@ -26,7 +27,7 @@ def corrupt_ppl(pplid: str):
     with Db(db_path=db_path) as db:
         # Ensure the pplid exists in the database before attempting deletion
         if pplid in get_ppls():
-            print('Cross verify before deleting.')
+            print("Cross verify before deleting.")
 
             # Single attempt to verify the correct pplid
             pplid1 = input("Enter the same pplid: ")
