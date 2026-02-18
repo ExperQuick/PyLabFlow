@@ -37,6 +37,14 @@ PyLabFlow is **domain-agnostic**, leveraging abstract `Component` and `WorkFlow`
   - Automatic tracking of the session origin (e.g., Jupyter session, script filename) and execution time for enhanced auditability.
 
 ---
+## Example Setups
+
+ML Setup:
+👉 https://github.com/ExperQuick/PLF_SetUps/tree/main/PLFML
+
+Basic DL Setup:
+👉 https://github.com/ExperQuick/PLF_DL_SetUps/tree/main/Basic
+
 
 ## 🛠 Installation
 
