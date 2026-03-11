@@ -16,6 +16,9 @@ PyLabFlow is **domain-agnostic**, leveraging abstract `Component` and `WorkFlow`
 
 ---
 
+![cover](https://github.com/user-attachments/assets/784019f7-fa28-4379-8967-dece241dd96a)
+
+
 ## ✨ Key Capabilities
 
 - **Offline-First**:
