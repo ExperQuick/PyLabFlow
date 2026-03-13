@@ -1,9 +1,6 @@
 import json
 from pathlib import Path
 from .context import get_shared_data
-    
-    
-    
 
 
 def _load_transfer_config():
@@ -19,9 +16,11 @@ def _load_transfer_config():
         return {
             "active_transfer_id": None,
             "history": [],
-            "ppl_to_transfer": {} #sqlit3
+            "ppl_to_transfer": {},  # sqlit3
         }
     return json.loads(cfg_path.read_text(encoding="utf-8"))
+
+
 # ---------------------------
 
 
@@ -44,16 +43,17 @@ class TransferContext:
             return {}
         return json.loads(meta_path.read_text(encoding="utf-8"))
 
-    def map_cnfg(self, cnfg): 
+    def map_cnfg(self, cnfg):
 
-        pplid = cnfg['pplid']       
+        pplid = cnfg["pplid"]
+
         def remap(d):
             if isinstance(d, dict):
                 for k, v in d.items():
                     if "loc" in k and isinstance(v, str):
                         # Map LOC via transfer context
                         d[k] = self.map_loc(v, pplid=pplid)
-                    elif 'src' in k and isinstance(v, str):
+                    elif "src" in k and isinstance(v, str):
                         # Map file paths via transfer context
                         d[k] = self.map_src(v)
                     else:
@@ -61,6 +61,7 @@ class TransferContext:
             elif isinstance(d, list):
                 for item in d:
                     remap(item)
+
         remap(cnfg)
         return cnfg
 
@@ -74,7 +75,7 @@ class TransferContext:
         path_map = meta.get("path_map", {})
 
         for src, dst in path_map.items():
-            dst = self.transfers_dir / transfer_id /"payload"/ dst
+            dst = self.transfers_dir / transfer_id / "payload" / dst
             if src.startswith(src):
                 return src.replace(src, dst, 1)
 

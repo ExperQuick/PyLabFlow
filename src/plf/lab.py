@@ -13,15 +13,19 @@ import pandas as pd
 from .context import set_shared_data, get_caller, register_libs_path, get_shared_data
 from .utils import Db
 
-__all__ = ["lab_setup", "create_project", "get_logs", 'create_clone', 'init_clone']
- 
+__all__ = ["lab_setup", "create_project", "get_logs", "create_clone", "init_clone"]
+
+
 def export_settigns():
     settings = get_shared_data()
     # Change project_path to data_path parent
-    pth = os.path.join(Path(settings['data_path']).parent, settings["project_name"] + ".json")
+    pth = os.path.join(
+        Path(settings["data_path"]).parent, settings["project_name"] + ".json"
+    )
     with open(pth, "w", encoding="utf-8") as out_file:
         json.dump(settings, out_file, indent=4)
     return pth
+
 
 def create_project(settings: dict) -> str:
     """
@@ -37,29 +41,26 @@ def create_project(settings: dict) -> str:
     setting_path = os.path.join(data_path, f"{project_name}.json")
 
     # Update settings with absolute paths
-    settings.update({
-
-        "lab_id": None,
-        "lab_role": "base",
-
-
-        "project_dir": project_dir,
-        "component_dir": component_dir,
-        "data_path": data_path,
-        "setting_path": setting_path,
-    })
+    settings.update(
+        {
+            "lab_id": None,
+            "lab_role": "base",
+            "project_dir": project_dir,
+            "component_dir": component_dir,
+            "data_path": data_path,
+            "setting_path": setting_path,
+        }
+    )
 
     # Create required directories
     for key in ["data_path", "component_dir"]:
         os.makedirs(settings[key], exist_ok=True)
-        
+
     # Remove old databases if any
     for db_file in ["logs.db", "ppls.db"]:
         db_path = os.path.join(data_path, db_file)
         if os.path.exists(db_path):
             os.remove(db_path)
-
-
 
     base_dir = Path(data_path)
 
@@ -76,6 +77,7 @@ def create_project(settings: dict) -> str:
 
     return setting_path
 
+
 def create_and_init_db(db_path: str, tables: list, init_statements: list = None):
     db = Db(db_path=db_path)
     for table_sql in tables:
@@ -84,6 +86,7 @@ def create_and_init_db(db_path: str, tables: list, init_statements: list = None)
         for stmt, params in init_statements:
             db.execute(stmt, params)
     db.close()
+
 
 def setup_databases(settings: dict):
     """
@@ -101,7 +104,9 @@ def setup_databases(settings: dict):
             created_time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP
         );
     """
-    log_init = [("INSERT INTO logs (logid, called_at) VALUES (?, ?)", ('log0', get_caller()))]
+    log_init = [
+        ("INSERT INTO logs (logid, called_at) VALUES (?, ?)", ("log0", get_caller()))
+    ]
     create_and_init_db(logs_db_path, [logs_table], log_init)
 
     # ---- ppls.db ----
@@ -136,7 +141,7 @@ def setup_databases(settings: dict):
             started_time TEXT NOT NULL DEFAULT CURRENT_TIMESTAMP,
             FOREIGN KEY(pplid) REFERENCES ppls(pplid)
         );
-        """
+        """,
     ]
     create_and_init_db(ppls_db_path, ppls_tables)
 
@@ -154,6 +159,7 @@ def setup_databases(settings: dict):
     """
     create_and_init_db(archived_ppls_db_path, [archived_ppls_table])
 
+
 def lab_setup(settings_path: Optional[str]) -> None:
     if settings_path and os.path.exists(settings_path):
         with open(settings_path, encoding="utf-8") as sp:
@@ -170,7 +176,6 @@ def lab_setup(settings_path: Optional[str]) -> None:
     else:
         raise ValueError("Provide either settings_path or settings for lab setup")
 
-
     caller = get_caller()
 
     log_path = os.path.join(settings["data_path"], "logs.db")
@@ -181,15 +186,13 @@ def lab_setup(settings_path: Optional[str]) -> None:
     row_count = cursor.fetchone()[0]
     logid = f"log{row_count}"
     # Insert new log
-    db.execute(
-        "INSERT INTO logs (logid, called_at) VALUES (?, ?)",
-        (logid,  caller)
-    )
+    db.execute("INSERT INTO logs (logid, called_at) VALUES (?, ?)", (logid, caller))
 
     db.close()
     set_shared_data(settings, logid)
     register_libs_path(settings["component_dir"])
-   
+
+
 def get_logs():
     """
     Retrieve all log records from the logs database and return them as a DataFrame.
@@ -212,7 +215,6 @@ def get_logs():
     db.close()
     df = pd.DataFrame(rows, columns=col_names)
     return df
-
 
 
 def create_clone(name, desc="", clone_type="remote", clone_id=None):
@@ -247,7 +249,7 @@ def create_clone(name, desc="", clone_type="remote", clone_id=None):
         "name": name,
         "desc": desc,
         "created_at": datetime.utcnow().isoformat(),
-        "transfers": []
+        "transfers": [],
     }
 
     with open(clones_dir / "clone.json", "w", encoding="utf-8") as f:
@@ -256,13 +258,12 @@ def create_clone(name, desc="", clone_type="remote", clone_id=None):
     return clone_cfg
 
 
-
 def init_clone(
     clone_config: dict,
     data_path: str,
     component_dir: str,
 ):
-    
+
     clone_id = clone_config["clone_id"]
 
     # Absolute paths
@@ -277,12 +278,10 @@ def init_clone(
         # Identity
         "lab_id": clone_id,
         "lab_role": "remote",
-
         # Project
         "project_name": project_name,
         "project_dir": project_dir,
         "component_dir": component_dir,
-
     }
 
     # -----------------------------

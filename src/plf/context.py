@@ -71,7 +71,7 @@ def get_shared_data() -> dict:
 # Function to set data for the current context
 
 
-def set_shared_data(data: dict, logid: str=None) -> dict:
+def set_shared_data(data: dict, logid: str = None) -> dict:
     """
     Set the shared data dictionary for the current context.
 

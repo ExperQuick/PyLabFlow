@@ -5,6 +5,7 @@ import os
 import json
 from plf.lab import create_project, lab_setup
 
+
 @pytest.fixture(scope="session")
 def setup_lab_env(tmp_path_factory):
     tmp_dir = tmp_path_factory.mktemp("lab_project")
@@ -20,7 +21,4 @@ def setup_lab_env(tmp_path_factory):
     settings_path = create_project(settings)
     lab_setup(settings_path)
 
-    return {
-        "settings": settings,
-        "path": tmp_dir
-    }
+    return {"settings": settings, "path": tmp_dir}
